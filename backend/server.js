@@ -10,6 +10,9 @@ dotenv.config({
 //app created
 const app = express();
 
+//middle wares
+app.use(express.json()); // to parse req.body
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Hello World!");
