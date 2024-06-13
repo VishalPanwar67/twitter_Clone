@@ -1,0 +1,17 @@
+/.vscode
+/node_modules/
+./dist
+/package
+
+*.env
+.env
+.env.*
+
+*.svg
+*.png
+*.ico
+*.sh
+*.pxd
+
+.gitattributes
+.gitignore
