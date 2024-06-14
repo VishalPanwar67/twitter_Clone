@@ -1,12 +1,22 @@
 import express, { urlencoded } from "express";
-import authRoutes from "./routes/auth.routes.js";
 import dotenv from "dotenv";
-import connectMongoDB from "./db/connectMongoDB.js";
 import cookieParser from "cookie-parser"; // to get cookies from req object and set cookies in res object
+import { v2 as cloudinary } from "cloudinary"; //for using cloudinary
+
+import { authRoutes, userRoutes } from "./routes/index.js";
+
+import connectMongoDB from "./db/connectMongoDB.js";
 
 dotenv.config({
   path: "././.env",
 }); //dotevn file configed
+
+//cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 //app created
 const app = express();
@@ -21,7 +31,8 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use("/api/auth", authRoutes); 
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 // connect the DataBase
 connectMongoDB()
