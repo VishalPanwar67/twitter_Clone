@@ -22,6 +22,12 @@ const signup = async (req, res) => {
       return res.status(400).json({ error: "Email alrady Exist" });
     }
 
+    if (password.lenght < 6) {
+      return res
+        .status(400)
+        .json({ error: "password is short=> must have more then 6 " });
+    }
+
     //#hashing the pass
     const salt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, salt);
@@ -45,7 +51,7 @@ const signup = async (req, res) => {
         followers: newUser.followers,
         following: newUser.following,
         profileImg: newUser.profileImg,
-        coverImgL: newUser.coverImg,
+        coverImg: newUser.coverImg,
       });
     } else {
       console.log(`Error in signup controller funtion =>: ${error.message}`);
@@ -58,16 +64,57 @@ const signup = async (req, res) => {
 
 //Log In Function
 const login = async (req, res) => {
-  res.json({
-    data: "you are login ",
-  });
+  try {
+    const { username, password } = req.body;
+
+    const user = await User.findOne({ username }); //find the user from dataBase
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user?.password || ""
+    ); //check the password
+
+    if (!user || !isPasswordCorrect) {
+      console.log(`Invalid username or password => ${username}`);
+      return res.status(400).json({ error: "Invalid username or password" });
+    }
+
+    generateTokenAndSetCookie(user._id, res);
+
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      followers: user.followers,
+      following: user.following,
+      profileImg: user.profileImg,
+      coverImg: user.coverImg,
+    });
+  } catch (error) {
+    console.log(`Unable to log in: ${error}`);
+    return res.status(500).json({ error: "Unable to log in - Catch Block" });
+  }
 };
 
 ////Log out Function
 const logout = async (req, res) => {
-  res.json({
-    data: "you are logout",
-  });
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log(`Unable to log out: ${error}`);
+    return res.status(500).json({ error: "Unable to log out - Catch Block" });
+  }
 };
 
-export { signup, login, logout };
+const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(`Unable to get user: ${error}`);
+    return res.status(500).json({ error: "Unable to get user - Catch Block" });
+  }
+};
+
+export { signup, login, logout, getMe };

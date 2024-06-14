@@ -3,16 +3,23 @@ const router = express.Router();
 
 //routes in this same file
 router.get("/testEndPoint", (req, res, next) => {
-    res.json({
-        data: "you are signup",
-    })
-})
+  res.json({
+    data: "you are signup",
+  });
+});
 
-import {signup, login, logout } from "../controllers/auth.controller.js";
+import protectRoute from "../middlewares/protectRoute.js";
+import {
+  signup,
+  login,
+  logout,
+  getMe,
+} from "../controllers/auth.controller.js";
 
 //routes import form the auth file
+router.get("/me", protectRoute, getMe); //to get user is loged in or not=> middleware
 router.get("/signup", signup);
-router.get("/login", login)
-router.get("/logout", logout)
+router.post("/login", login);
+router.post("/logout", logout);
 
 export default router;

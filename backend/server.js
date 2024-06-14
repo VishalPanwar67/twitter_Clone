@@ -1,7 +1,8 @@
-import express from "express";
+import express, { urlencoded } from "express";
 import authRoutes from "./routes/auth.routes.js";
 import dotenv from "dotenv";
 import connectMongoDB from "./db/connectMongoDB.js";
+import cookieParser from "cookie-parser"; // to get cookies from req object and set cookies in res object
 
 dotenv.config({
   path: "././.env",
@@ -12,13 +13,15 @@ const app = express();
 
 //middle wares
 app.use(express.json()); // to parse req.body
+app.use(urlencoded({ extended: true })); //to parse form data (urlencoded)
+app.use(cookieParser()); // to get cookies from req object and set cookies in res object
 
 // Routes
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); 
 
 // connect the DataBase
 connectMongoDB()
