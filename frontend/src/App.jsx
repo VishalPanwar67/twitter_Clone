@@ -3,9 +3,10 @@ import "./App.css";
 function App() {
   return (
     <>
-      <h1>Hare Krishna</h1>
+      <button className="btn">Button</button>
     </>
   );
 }
 
 export default App;
+ 
