@@ -3,7 +3,12 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser"; // to get cookies from req object and set cookies in res object
 import { v2 as cloudinary } from "cloudinary"; //for using cloudinary
 
-import { authRoutes, userRoutes, postRoutes } from "./routes/index.js";
+import {
+  authRoutes,
+  userRoutes,
+  postRoutes,
+  notificationRoutes,
+} from "./routes/index.js";
 
 import connectMongoDB from "./db/connectMongoDB.js";
 
@@ -34,6 +39,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // connect the DataBase
 connectMongoDB()
