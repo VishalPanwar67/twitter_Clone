@@ -11,6 +11,8 @@ import {
 
 import { RightPanel, Sidebar } from "./components/index.Components.js";
 
+import { Toaster } from "react-hot-toast";
+
 function App() {
   return (
     <div className="flex max-w-6xl mx-auto">
@@ -25,6 +27,7 @@ function App() {
       </Routes>
 
       <RightPanel />
+      <Toaster />
     </div>
   );
 }

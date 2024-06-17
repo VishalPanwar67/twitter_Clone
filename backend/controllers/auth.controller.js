@@ -22,7 +22,7 @@ const signup = async (req, res) => {
       return res.status(400).json({ error: "Email alrady Exist" });
     }
 
-    if (password.lenght < 6) {
+    if (password.length < 6) {
       return res
         .status(400)
         .json({ error: "password is short=> must have more then 6 " });

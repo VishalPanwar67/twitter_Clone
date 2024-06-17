@@ -18,7 +18,7 @@ import {
 
 //routes import form the auth file
 router.get("/me", protectRoute, getMe); //to get user is loged in or not=> middleware
-router.get("/signup", signup);
+router.post("/signup", signup);
 router.post("/login", login);
 router.post("/logout", logout);
 
