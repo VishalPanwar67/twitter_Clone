@@ -27,7 +27,7 @@ cloudinary.config({
 const app = express();
 
 // Middlewares
-app.use(express.json()); // to parse req.body
+app.use(express.json({ limit: "5mb" })); // to parse req.body
 app.use(urlencoded({ extended: true })); // to parse form data (urlencoded)
 app.use(cookieParser()); // to get cookies from req object and set cookies in res object
 

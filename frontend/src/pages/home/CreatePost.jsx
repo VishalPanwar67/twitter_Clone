@@ -1,9 +1,7 @@
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
-import { IoCloseSharp } from "react-icons/io5";
-
 import { useRef, useState } from "react";
-
+import { IoCloseSharp } from "react-icons/io5";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
@@ -16,7 +14,7 @@ const CreatePost = () => {
   const queryClient = useQueryClient();
 
   const {
-    mutate: CreatePost,
+    mutate: createPost,
     isPending,
     isError,
     error,
@@ -30,39 +28,27 @@ const CreatePost = () => {
           },
           body: JSON.stringify({ text, img }),
         });
-       
         const data = await res.json();
-        console.log(data);
-        if (!res.ok) throw new Error(data.error || "Failed to create post");
-
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
         return data;
       } catch (error) {
-        toast.error(error.message);
+        throw new Error(error);
       }
     },
+
     onSuccess: () => {
-      // console.log(text, img);
       setText("");
       setImg(null);
       toast.success("Post created successfully");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: (error) => {
-      toast.error(error.message);
-    },
   });
-
-  // const isPending = false;
-  // const isError = false;
-
-  // const data = {
-  //   profileImg: "/avatars/boy1.png",
-  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // alert("Post created successfully");
-    CreatePost({ text, img });
+    createPost({ text, img });
   };
 
   const handleImgChange = (e) => {
@@ -125,11 +111,7 @@ const CreatePost = () => {
             {isPending ? "Posting..." : "Post"}
           </button>
         </div>
-        {isError && (
-          <div className="text-red-500">
-            {error.message || "Something went wrong"}
-          </div>
-        )}
+        {isError && <div className="text-red-500">{error.message}</div>}
       </form>
     </div>
   );
