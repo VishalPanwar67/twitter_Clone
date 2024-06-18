@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 import Posts from "../../components/common/Posts";
@@ -8,6 +8,8 @@ import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkele
 import EditProfileModal from "./EditProfileModal";
 
 import { POSTS } from "../../utils/db/dummy";
+
+import useFollow from "../../hooks/useFollow.jsx";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
@@ -25,8 +27,12 @@ const ProfilePage = () => {
   const { username } = useParams();
   // console.log(username);
 
+  const { follow, isPending } = useFollow();
+  const queryClient = useQueryClient();
+  const { data: authUser } = useQuery({
+    queryKey: ["authUser"],
+  });
   // const isLoading = false;
-  const isMyProfile = true;
 
   const {
     data: user,
@@ -48,6 +54,39 @@ const ProfilePage = () => {
       }
     },
   });
+
+  const { mutateAsync: updateProfile, isPending: isUpdatingProfile } =
+    useMutation({
+      mutationFn: async (formData) => {
+        try {
+          const res = await fetch(`/api/user/update`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || "Something went wrong");
+          }
+          return data;
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      },
+      onSuccess: () => {
+        toast.success("Profile updated successfully");
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+          queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+        ]);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
+    });
+
   const memberSinceDate = new Date(user?.createdAt).toLocaleDateString(
     "en-US",
     {
@@ -57,6 +96,9 @@ const ProfilePage = () => {
     }
   );
   // console.log(memberSinceDate);
+
+  const isMyProfile = authUser?._id === user?._id;
+  const amIFollowing = authUser?.following.includes(user?._id);
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -154,17 +196,23 @@ const ProfilePage = () => {
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user?._id)}
                   >
-                    Follow
+                    {isPending && "Loading..."}
+                    {!isPending && amIFollowing && "Unfollow"}
+                    {!isPending && !amIFollowing && "Follow"}
                   </button>
                 )}
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={async () => {
+                      await updateProfile({ coverImg, profileImg });
+                      setProfileImg(null);
+                      setCoverImg(null);
+                    }}
                   >
-                    Update
+                    {isUpdatingProfile ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>
