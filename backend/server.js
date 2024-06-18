@@ -26,6 +26,7 @@ cloudinary.config({
 
 //app created
 const app = express();
+const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 // Middlewares
@@ -34,9 +35,9 @@ app.use(urlencoded({ extended: true })); // to parse form data (urlencoded)
 app.use(cookieParser()); // to get cookies from req object and set cookies in res object
 
 // Routes
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello World!");
+// });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
@@ -58,8 +59,8 @@ connectMongoDB()
       console.log(`app is not able to connect :: ${error}`);
       throw error;
     });
-    app.listen(process.env.PORT || 3000, () => {
-      console.log(`app is listening on port :: ${process.env.PORT}`);
+    app.listen(PORT, () => {
+      console.log(`app is listening on port :: ${PORT}`);
     });
   })
   .catch((error) => {
