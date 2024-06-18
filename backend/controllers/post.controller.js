@@ -90,13 +90,26 @@ const commentOnPost = async (req, res) => {
     };
 
     post.comments.push(comment);
-
     await post.save();
-    return res
-      .status(200)
-      .json({ message: "Comment added successfully", post: post });
+
+    // Populate the user field in comments
+    const populatedPost = await Post.findById(postId).populate(
+      "comments.user",
+      "username"
+    );
+
+    const postComments = populatedPost.comments.map((comment) => ({
+      user: {
+        _id: comment.user._id,
+        username: comment.user.username,
+      },
+      text: comment.text,
+      createdAt: comment.createdAt,
+    }));
+
+    return res.status(200).json(postComments);
   } catch (error) {
-    console.log(`Unable to comment on post: ${error}`);
+    console.error(`Unable to comment on post: ${error}`);
     return res.status(500).json({ error: "Unable to comment on post" });
   }
 };
@@ -135,7 +148,7 @@ const likeUnlikePost = async (req, res) => {
         to: post.user,
         type: "like",
       });
-      
+
       await notification.save();
       const updateLikes = post.likes;
       return res.status(200).json(updateLikes);

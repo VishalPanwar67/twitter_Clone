@@ -16,6 +16,7 @@ const Post = ({ post }) => {
   const [comment, setComment] = useState("");
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const queryClient = useQueryClient();
+
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
@@ -72,6 +73,47 @@ const Post = ({ post }) => {
     },
   });
 
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/comment/${post._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: comment }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error.message || "Failed to post comment");
+      }
+    },
+    onSuccess: (postComments) => {
+      toast.success("Comment posted successfully");
+      setComment("");
+
+      // Update the comments for the specific post in the cache
+      queryClient.setQueryData(["posts"], (oldData) => {
+        if (!oldData) return [];
+
+        return oldData.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, comments: postComments };
+          }
+          return p;
+        });
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const postOwner = post.user;
   const isLiked = post.likes.includes(authUser?._id);
 
@@ -112,7 +154,7 @@ const Post = ({ post }) => {
   })(new Date(isoString) - new Date());
   const formattedDate = `${result}`;
 
-  const isCommenting = false;
+  // const isCommenting = false;
 
   const handleDeletePost = () => {
     deletePost();
@@ -120,6 +162,13 @@ const Post = ({ post }) => {
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (isCommenting) return;
+
+    if (comment.trim()) {
+      commentPost();
+    } else {
+      toast.error("Please enter a comment");
+    }
   };
 
   const handleLikePost = () => {
