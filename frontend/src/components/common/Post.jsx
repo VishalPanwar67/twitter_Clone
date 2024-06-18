@@ -3,21 +3,88 @@ import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const queryClient = useQueryClient();
+  const { mutate: deletePost, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/${post._id}`, {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   const postOwner = post.user;
   const isLiked = false;
 
-  const isMyPost = true;
+  const isMyPost = authUser?._id === post.user._id;
+  // const isMyPost = true;
 
-  const formattedDate = "1h";
+  //getting the time form the post when it was created
+  const isoString = post.createdAt;
+  const result = ((ms) => {
+    ms = Math.abs(ms); // Ensure the milliseconds difference is positive
+    const totalMinutes = Math.floor(ms / 60000);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const totalDays = Math.floor(totalHours / 24);
+    let months = Math.floor(totalDays / 31);
+    const days = totalDays % 31;
+    const hours = totalHours % 24;
+    const minutes = totalMinutes % 60;
+
+    if (months > 12) {
+      const years = Math.floor(months / 12);
+      months = months % 12;
+      return months > 0
+        ? `${years} years ${months} months ago`
+        : `${years} years ago`;
+    } else if (months > 0 && months <= 12) {
+      return hours > 0
+        ? `${months}months ${days}d ${hours}h ago`
+        : `${months}months ${days}d ago`;
+    } else if (days > 0 && days < 7) {
+      return `${days}d ${hours}h`;
+    } else if (days > 7) {
+      return `${days}d`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return minutes > 0 ? `${minutes}m` : `Just Now`;
+    }
+  })(new Date(isoString) - new Date());
+  const formattedDate = `${result}`;
 
   const isCommenting = false;
 
-  const handleDeletePost = () => {};
+  const handleDeletePost = () => {
+    deletePost();
+  };
 
   const handlePostComment = (e) => {
     e.preventDefault();
@@ -50,10 +117,13 @@ const Post = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                <FaTrash
-                  className="cursor-pointer hover:text-red-500"
-                  onClick={handleDeletePost}
-                />
+                {!isPending && (
+                  <FaTrash
+                    className="cursor-pointer hover:text-red-500"
+                    onClick={handleDeletePost}
+                  />
+                )}
+                {isPending && <LoadingSpinner />}
               </span>
             )}
           </div>
@@ -180,4 +250,3 @@ const Post = ({ post }) => {
   );
 };
 export default Post;
-    
